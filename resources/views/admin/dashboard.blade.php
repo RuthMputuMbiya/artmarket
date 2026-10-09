@@ -205,11 +205,7 @@
         <div class="stat-number">{{ $stats['total_oeuvres'] ?? 0 }}</div>
         <div class="stat-label">Oeuvres</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon red"><i class="fas fa-shopping-cart"></i></div>
-        <div class="stat-number">{{ $stats['total_commandes'] ?? 0 }}</div>
-        <div class="stat-label">Commandes</div>
-    </div>
+    
     <div class="stat-card">
         <div class="stat-icon blue"><i class="fas fa-credit-card"></i></div>
         <div class="stat-number">{{ number_format($stats['total_ventes'] ?? 0, 0) }} FC</div>
@@ -247,59 +243,7 @@
     </div>
 </div>
 
-<!-- ===== STATUT COMMANDES ===== -->
-<div class="chart-container">
-    <h3>Statut des commandes</h3>
-    <div style="display:flex; flex-wrap:wrap; gap:16px;">
-        <div style="flex:1;min-width:120px;background:#FDE8D0;border-radius:12px;padding:16px;text-align:center;">
-            <div style="font-size:24px;font-weight:700;color:#F39C12;">{{ $statut_commandes['en_attente'] ?? 0 }}</div>
-            <div style="font-size:12px;color:#7F8C8D;">En attente</div>
-        </div>
-        <div style="flex:1;min-width:120px;background:#D4E8FC;border-radius:12px;padding:16px;text-align:center;">
-            <div style="font-size:24px;font-weight:700;color:#3498DB;">{{ $statut_commandes['en_cours'] ?? 0 }}</div>
-            <div style="font-size:12px;color:#7F8C8D;">En cours</div>
-        </div>
-        <div style="flex:1;min-width:120px;background:#D4F4E6;border-radius:12px;padding:16px;text-align:center;">
-            <div style="font-size:24px;font-weight:700;color:#2ECC71;">{{ $statut_commandes['livree'] ?? 0 }}</div>
-            <div style="font-size:12px;color:#7F8C8D;">Livrees</div>
-        </div>
-        <div style="flex:1;min-width:120px;background:#FCD4D4;border-radius:12px;padding:16px;text-align:center;">
-            <div style="font-size:24px;font-weight:700;color:#E74C3C;">{{ $statut_commandes['annulee'] ?? 0 }}</div>
-            <div style="font-size:12px;color:#7F8C8D;">Annulees</div>
-        </div>
-    </div>
-</div>
 
-<!-- ===== DERNIERES COMMANDES ===== -->
-<div class="chart-container">
-    <h3>Dernieres commandes</h3>
-    <div class="table-container">
-        <table class="table-custom">
-            <thead>
-                <tr>
-                    <th>Reference</th>
-                    <th>Client</th>
-                    <th>Total</th>
-                    <th>Statut</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($dernieres_commandes ?? [] as $commande)
-                    <tr>
-                        <td><strong>#{{ $commande->reference ?? '' }}</strong></td>
-                        <td>{{ $commande->user->name ?? 'N/A' }}</td>
-                        <td><strong>{{ number_format($commande->total_ttc ?? 0, 2) }} FC</strong></td>
-                        <td><span class="badge-status {{ $commande->statut ?? '' }}">{{ ucfirst($commande->statut ?? '') }}</span></td>
-                        <td>{{ \Carbon\Carbon::parse($commande->created_at ?? now())->locale('fr')->isoFormat('DD MMM YYYY HH:mm') }}</td>
-                    </tr>
-                @empty
-                    <tr><td colspan="5" style="text-align:center;color:#95A5A6;">Aucune commande</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
 
 <!-- ===== DERNIERS UTILISATEURS ===== -->
 <div class="chart-container">

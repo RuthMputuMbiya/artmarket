@@ -21,7 +21,7 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $query = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $query = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->with(['user', 'devise', 'lignes.oeuvre']);
 
@@ -46,31 +46,31 @@ class CommandeController extends Controller
         }
 
         $commandes = $query->orderBy('created_at', 'desc')->paginate(15);
-        $statuts = ['en_attente', 'en_cours', 'expediee', 'livree', 'annulee', 'rembourse'];
+        $statuts = ['en_attente', 'en_cours', 'expediee', 'payer', 'livree', 'annulee', 'rembourse'];
 
-        $clients = User::whereHas('role', function ($q) {
+        $clients = User::whereHas('role', function($q) {
             $q->where('slug', 'client');
         })->get();
 
         $stats = [
-            'total' => Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+            'total' => Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             })->count(),
-            'en_attente' => Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+            'en_attente' => Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             })->where('statut', 'en_attente')->count(),
-            'en_cours' => Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+            'en_cours' => Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             })->where('statut', 'en_cours')->count(),
-            'livree' => Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+            'payer' => Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
                 $q->where('user_id', $user->id);
-            })->where('statut', 'livree')->count(),
-            'annulee' => Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+            })->where('statut', 'payer')->count(),
+            'annulee' => Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
                 $q->where('user_id', $user->id);
             })->where('statut', 'annulee')->count(),
-            'total_ventes' => Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+            'total_ventes' => Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
                 $q->where('user_id', $user->id);
-            })->where('statut', 'livree')->sum('total_ttc') ?? 0,
+            })->whereIn('statut', ['payer', 'livree'])->sum('total_ttc') ?? 0,
         ];
 
         return view('artisan.commandes.index', compact('commandes', 'statuts', 'stats', 'clients'));
@@ -87,7 +87,7 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $commande = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $commande = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->with([
             'user',
@@ -101,7 +101,7 @@ class CommandeController extends Controller
     }
 
     /**
-     * Mettre a jour le statut d'une commande
+     * Mettre à jour le statut d'une commande
      */
     public function updateStatus(Request $request, $id)
     {
@@ -111,12 +111,12 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $commande = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $commande = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->findOrFail($id);
 
         $request->validate([
-            'statut' => 'required|in:en_attente,en_cours,expediee,livree,annulee,rembourse'
+            'statut' => 'required|in:en_attente,en_cours,expediee,payer,livree,annulee,rembourse'
         ]);
 
         $commande->statut = $request->statut;
@@ -124,6 +124,11 @@ class CommandeController extends Controller
         if ($request->statut === 'livree') {
             $commande->date_livraison = now();
         }
+
+        // Commenté car la colonne n'existe pas encore
+        // if ($request->statut === 'payer') {
+        //     $commande->date_paiement = now();
+        // }
 
         $commande->save();
 
@@ -142,20 +147,20 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $commande = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $commande = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->with(['user', 'devise', 'lignes.oeuvre'])->findOrFail($id);
 
-        if (in_array($commande->statut, ['livree', 'annulee'])) {
+        if (in_array($commande->statut, ['livree', 'annulee', 'rembourse'])) {
             return redirect()->route('artisan.commandes.index')
-                ->with('error', 'Cette commande ne peut pas etre modifiee.');
+                ->with('error', 'Cette commande ne peut pas être modifiée.');
         }
 
         return view('artisan.commandes.edit', compact('commande'));
     }
 
     /**
-     * Mettre a jour une commande
+     * Mettre à jour une commande
      */
     public function update(Request $request, $id)
     {
@@ -165,13 +170,13 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $commande = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $commande = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->findOrFail($id);
 
-        if (in_array($commande->statut, ['livree', 'annulee'])) {
+        if (in_array($commande->statut, ['livree', 'annulee', 'rembourse'])) {
             return redirect()->route('artisan.commandes.index')
-                ->with('error', 'Cette commande ne peut pas etre modifiee.');
+                ->with('error', 'Cette commande ne peut pas être modifiée.');
         }
 
         $request->validate([
@@ -203,19 +208,19 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $commande = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $commande = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->findOrFail($id);
 
-        if (in_array($commande->statut, ['livree', 'en_cours', 'expediee'])) {
+        if (in_array($commande->statut, ['livree', 'en_cours', 'expediee', 'payer'])) {
             return redirect()->route('artisan.commandes.index')
-                ->with('error', 'Cette commande ne peut pas etre supprimee.');
+                ->with('error', 'Cette commande ne peut pas être supprimée.');
         }
 
         $commande->delete();
 
         return redirect()->route('artisan.commandes.index')
-            ->with('success', 'Commande supprimee avec succes.');
+            ->with('success', 'Commande supprimée avec succès.');
     }
 
     /**
@@ -228,12 +233,12 @@ class CommandeController extends Controller
             return response()->json(['error' => 'Non authentifie'], 401);
         }
 
-        $commandes = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $commandes = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->where('statut', 'en_attente')
-            ->with(['user', 'devise'])
-            ->orderBy('created_at', 'asc')
-            ->get();
+          ->with(['user', 'devise'])
+          ->orderBy('created_at', 'asc')
+          ->get();
 
         return response()->json($commandes);
     }
@@ -249,7 +254,7 @@ class CommandeController extends Controller
             return redirect()->route('login')->with('error', 'Veuillez vous connecter.');
         }
 
-        $query = Commande::whereHas('lignes.oeuvre', function ($q) use ($user) {
+        $query = Commande::whereHas('lignes.oeuvre', function($q) use ($user) {
             $q->where('user_id', $user->id);
         })->with(['user', 'devise']);
 
@@ -272,16 +277,16 @@ class CommandeController extends Controller
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function () use ($commandes) {
+        $callback = function() use ($commandes) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Reference', 'Client', 'Total', 'Statut', 'Date']);
+            fputcsv($file, ['Référence', 'Client', 'Total (FC)', 'Statut', 'Date']);
 
             foreach ($commandes as $commande) {
                 fputcsv($file, [
                     $commande->reference,
                     $commande->user->name ?? 'N/A',
-                    number_format($commande->total_ttc, 2) . ' ' . ($commande->devise->symbole ?? 'FC'),
-                    $commande->statut,
+                    number_format($commande->total_ttc, 0),
+                    ucfirst(str_replace('_', ' ', $commande->statut)),
                     $commande->created_at->format('d/m/Y H:i'),
                 ]);
             }

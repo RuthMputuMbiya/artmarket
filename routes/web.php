@@ -43,8 +43,6 @@ use App\Http\Controllers\Client\PaiementController;
 use App\Http\Controllers\Client\CommandeController;
 
 
-
-
 // ============================================================
 // PAGE D'ACCUEIL
 // ============================================================

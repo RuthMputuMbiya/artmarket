@@ -50,7 +50,7 @@
     .stat-mini.total { border-left-color: #6C3CE1; }
     .stat-mini.attente { border-left-color: #F39C12; }
     .stat-mini.cours { border-left-color: #3498DB; }
-    .stat-mini.livree { border-left-color: #2ECC71; }
+    .stat-mini.payer { border-left-color: #8B5CF6; }
     .stat-mini.annulee { border-left-color: #E74C3C; }
     .stat-mini.ventes { border-left-color: #9B59B6; }
 
@@ -212,6 +212,7 @@
     .badge-status.en_attente { background: #FDE8D0; color: #F39C12; }
     .badge-status.en_cours { background: #D4E8FC; color: #3498DB; }
     .badge-status.expediee { background: #D4E8FC; color: #2980B9; }
+    .badge-status.payer { background: #EDE4FF; color: #8B5CF6; }
     .badge-status.livree { background: #D4F4E6; color: #2ECC71; }
     .badge-status.annulee { background: #FCD4D4; color: #E74C3C; }
     .badge-status.rembourse { background: #F0F0F0; color: #7F8C8D; }
@@ -256,11 +257,11 @@
     .action-btn.edit { background: #D4E8FC; color: #3498DB; }
     .action-btn.edit:hover { background: #3498DB; color: white; }
 
-    .action-btn.delete { background: #FCD4D4; color: #E74C3C; }
-    .action-btn.delete:hover { background: #E74C3C; color: white; }
-
     .action-btn.status { background: #FDE8D0; color: #F39C12; }
     .action-btn.status:hover { background: #F39C12; color: white; }
+
+    .action-btn.paiement { background: #EDE4FF; color: #8B5CF6; }
+    .action-btn.paiement:hover { background: #8B5CF6; color: white; }
 
     /* ===== TOOLTIP ===== */
     .action-btn {
@@ -490,10 +491,10 @@
         <div class="number">{{ $stats['en_cours'] }}</div>
         <div class="label">En cours</div>
     </div>
-    <div class="stat-mini livree">
+    <div class="stat-mini payer">
         <span class="icon"></span>
-        <div class="number">{{ $stats['livree'] }}</div>
-        <div class="label">Livrées</div>
+        <div class="number">{{ $stats['payer'] ?? 0 }}</div>
+        <div class="label">Payées</div>
     </div>
     <div class="stat-mini annulee">
         <span class="icon"></span>
@@ -543,9 +544,7 @@
         </a>
     </form>
 
-    <a href="{{ route('artisan.commandes.export', request()->all()) }}" class="btn-export">
-        <i class="fas fa-file-export"></i> Exporter
-    </a>
+    
 </div>
 
 <!-- ===== TABLEAU ===== -->
@@ -558,7 +557,7 @@
                 <th>Total</th>
                 <th>Statut</th>
                 <th>Date</th>
-                <th style="text-align:center;width:140px;min-width:140px;">Actions</th>
+                <th style="text-align:center;width:160px;min-width:160px;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -592,13 +591,24 @@
                                 <i class="fas fa-eye"></i>
                             </a>
 
-                            <!-- Changer statut (uniquement pour les commandes non livrées/annulées) -->
+                            <!-- Changer statut -->
                             @if(!in_array($commande->statut, ['livree', 'annulee', 'rembourse']))
                                 <form action="{{ route('artisan.commandes.update-status', $commande->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     <input type="hidden" name="statut" value="">
                                     <button type="button" class="action-btn status" title="Changer statut" onclick="openStatusModal({{ $commande->id }}, '{{ $commande->statut }}')">
                                         <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </form>
+                            @endif
+
+                            <!-- Marquer comme payé -->
+                            @if(!in_array($commande->statut, ['payer', 'livree', 'annulee', 'rembourse']))
+                                <form action="{{ route('artisan.commandes.update-status', $commande->id) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <input type="hidden" name="statut" value="payer">
+                                    <button type="submit" class="action-btn paiement" title="Marquer comme payé" onclick="return confirm('Marquer cette commande comme payée ?')">
+                                        <i class="fas fa-credit-card"></i>
                                     </button>
                                 </form>
                             @endif
@@ -630,7 +640,7 @@
                 <option value="en_attente">En attente</option>
                 <option value="en_cours">En cours</option>
                 <option value="expediee">Expédiée</option>
-                <option value="payer">Payer</option>
+                <option value="payer">Payée</option>
                 <option value="livree">Livrée</option>
                 <option value="annulee">Annulée</option>
                 <option value="rembourse">Remboursée</option>

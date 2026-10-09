@@ -156,14 +156,7 @@
             {{ $stats['oeuvres_publiees'] }} publiées
         </div>
     </div>
-    <div class="stat-card" style="border-color:#3498DB;">
-        <div class="icon"></div>
-        <div class="number">{{ $stats['total_commandes'] }}</div>
-        <div class="label">Commandes</div>
-        <div style="font-size:10px;color:#95A5A6;margin-top:2px;">
-            {{ $stats['commandes_livrees'] }} livrées
-        </div>
-    </div>
+    
     <div class="stat-card" style="border-color:#2ECC71;">
         <div class="icon"></div>
         <div class="number">{{ number_format($stats['total_ventes'], 0) }} FC</div>
